@@ -12,6 +12,7 @@ app.use(cookieParser());
 app.use('/',(req,res)=>{
     res.send("Hello world");
 })
+
 app.listen(PORT,()=>{
     connectToMongoDB();
     console.log(`Server is running on ${PORT}`);
