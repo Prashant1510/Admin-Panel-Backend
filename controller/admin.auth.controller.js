@@ -1,5 +1,6 @@
-import Admin from "../models/admin.model";
-
+import Admin from "../models/admin.model.js";
+import bcrypt from "bcrypt";
+import generateTokenAndSetCookie from "../util/generateTokenAndSetCookie.js"
 
 // this is for singup as new admin user
 export const admin_signup = async (req, res) => {
@@ -35,7 +36,7 @@ export const admin_signup = async (req, res) => {
       randomId = generateRandomId();
       const existingadmin = await Admin.findOne({ id: randomId });
 
-      if (!existingEmployee) {
+      if (!existingadmin) {
         isUnique = true; // Exit loop if the ID is unique
       }
     }
@@ -44,8 +45,8 @@ export const admin_signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10); // for creating salt
     const hashedpassword = await bcrypt.hash(password, salt); // for creating hash password with salt
 
-    const newEmployee = new Employee({
-      // creating the newadmin instance form Employee model schema
+    const newAdmin = new Admin({
+      // creating the newadmin instance form Admin model schema
       id: randomId,
       profilePic,
       name,
@@ -55,7 +56,7 @@ export const admin_signup = async (req, res) => {
     });
 
     if (newAdmin) {
-      generateTokenAndSetCookie(newAdmin._id, res); // for generating authentication token and save in browser cookie
+      generateTokenAndSetCookie(newAdmin._id,"admin", res); // for generating authentication token and save in browser cookie
       await newAdmin.save(); // for saving the newadmin into to the database
 
       return res.status(201).json({
@@ -86,12 +87,12 @@ export const admin_login = async (req,res) =>{
       if (!admin || !isPasswordCorrect) {
         return res.status(400).json({ error: "Invalid Credentials" });
       }
-      generateTokenAndSetCookie(admin._id, res);         //generating the jwt token with adminID and store into cookie and send res to browser 
+      generateTokenAndSetCookie(admin._id,"admin", res);         //generating the jwt token with adminID and store into cookie and send res to browser 
       return res.status(200).json({
         _id: admin._id,
-        fullName: admin.fullName,
-        adminName: admin.adminName,
+        name: admin.name,
         profilePic: admin.profilePic,
+        gender: admin.gender,
       }); 
     } catch (error) {
       console.log("Error in login,", error.message);
@@ -99,7 +100,7 @@ export const admin_login = async (req,res) =>{
     }
 }
 
-
+// this is for logout
 export const admin_logout = async (req,res) =>{
     try {
       res.cookie("jwt","",{maxAge: 0});       //reset the jwt cookie to null
